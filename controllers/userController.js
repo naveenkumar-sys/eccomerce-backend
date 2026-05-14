@@ -110,10 +110,41 @@ export const forgetPassword = async (req, res) => {
     </div>
   `,
     );
-    res.status(200).json({ message: "Email sent Successfully" });
+    res.status(200).json({ message: "Email sent Successfully", token });
   } catch (error) {
     res
       .status(500)
-      .json({ message: "unable to reset password", error: error.message });
+      .json({ message: "unable to send mail", error: error.message });
+  }
+};
+
+//reset password
+export const resetPassword = async (req, res) => {
+  try {
+    const { id, token } = req.params;
+    const { password } = req.body;
+
+    const findUser = await User.findById(id);
+    if (!findUser) {
+      return res.status(404).json({ message: "unable to find user" });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    if (!decoded) {
+      return res.status(404).json({ message: "Token has expired" });
+    }
+    const updateUser = await User.findByIdAndUpdate(
+      id,
+      { password: hashedPassword },
+      { new: true },
+    );
+    res
+      .status(200)
+      .json({ message: "password reset is completed", data: updateUser });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Unable to reset password", error: error.message });
   }
 };
