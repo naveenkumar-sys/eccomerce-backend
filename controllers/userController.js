@@ -83,11 +83,33 @@ export const forgetPassword = async (req, res) => {
 
     await sendMail(
       findUser.email,
-      `You are receiving this email because you requested a password reset. 
-      Click the link below to reset your password: http://localhost:5173/reset-password/${findUser._id}/${token} 
-      This link will expire in 20 minutes.`,
-    );
+      "Password Reset Link",
+      `
+    <div style="font-family: Arial; padding:20px;">
+      <h2>Reset Your Password</h2>
 
+      <p>You requested a password reset.</p>
+
+      <a 
+        href="http://localhost:5173/reset-password/${findUser._id}/${token}"
+        style="
+          background:#2563eb;
+          color:white;
+          padding:10px 20px;
+          text-decoration:none;
+          border-radius:5px;
+          display:inline-block;
+        "
+      >
+        Reset Password
+      </a>
+
+      <p style="margin-top:20px;">
+        This link will expire in 20 minutes.
+      </p>
+    </div>
+  `,
+    );
     res.status(200).json({ message: "Email sent Successfully" });
   } catch (error) {
     res
