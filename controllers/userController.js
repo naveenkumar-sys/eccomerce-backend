@@ -16,13 +16,13 @@ export const registerUser = async (req, res) => {
         .status(400)
         .json({ message: "User is already exist just login" });
     }
-    const hashPassword = await bcrypt.hash(password, 10);
+    const hashPassword = await bcrypt.hash(password, 10); //hashing password to store db with bcrypt
     const newUser = await User.create({
       name,
       email,
       password: hashPassword,
       role,
-    });
+    }); // create new user every time
     res
       .status(201)
       .json({ message: "User created successfully", user: newUser });
@@ -36,7 +36,7 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const findUser = await User.findOne({ email });
+    const findUser = await User.findOne({ email }); // findOne expect fieldname as object only id should not be given as object
 
     if (!findUser) {
       return res
@@ -44,16 +44,16 @@ export const login = async (req, res) => {
         .json({ message: "user not found please register first" });
     }
 
-    const checkPassword = await bcrypt.compare(password, findUser.password);
+    const checkPassword = await bcrypt.compare(password, findUser.password); // check password with help of bcrypt.compare
 
     if (!checkPassword) {
       return res.status(401).json({ message: "Invalid password" });
     }
 
     const token = jwt.sign(
-      { id: findUser._id, role: findUser.role },
+      { id: findUser._id },
       process.env.JWT_SECRET_KEY,
-    );
+    ); // generate the token for every user to send to frontend with it expect object as id
 
     res.status(200).json({
       message: "The user logged in successfully",
@@ -79,7 +79,7 @@ export const forgetPassword = async (req, res) => {
     }
     const token = jwt.sign({ id: findUser._id }, process.env.JWT_SECRET_KEY, {
       expiresIn: "20m",
-    });
+    }); // generating token send email with id , and expire time
 
     await sendMail(
       findUser.email,
@@ -109,7 +109,7 @@ export const forgetPassword = async (req, res) => {
       </p>
     </div>
   `,
-    );
+    ); // call send email function which is in nodemailer file , where we send findUser email , along with html code with api attached with id , token
     res.status(200).json({ message: "Email sent Successfully", token });
   } catch (error) {
     res
@@ -121,14 +121,14 @@ export const forgetPassword = async (req, res) => {
 //reset password
 export const resetPassword = async (req, res) => {
   try {
-    const { id, token } = req.params;
+    const { id, token } = req.params; // getting id from url called req,params
     const { password } = req.body;
 
-    const findUser = await User.findById(id);
+    const findUser = await User.findById(id); // find by id o the user
     if (!findUser) {
       return res.status(404).json({ message: "unable to find user" });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10); // hashing new password which is typed by user
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     if (!decoded) {
@@ -138,7 +138,7 @@ export const resetPassword = async (req, res) => {
       id,
       { password: hashedPassword },
       { new: true },
-    );
+    ); // add the password with help of findById and update every user
     res
       .status(200)
       .json({ message: "password reset is completed", data: updateUser });
